@@ -73,6 +73,7 @@ export default function App() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [resourceForm, setResourceForm] = useState({ name: "", color: "#dcebd8", icon: "" });
+  const [prereqBanner, setPrereqBanner] = useState(false);
 
   async function loadData() {
     setLoading(true);
@@ -114,7 +115,11 @@ export default function App() {
   }, [items, categories, locations, search, filter]);
 
   function openCreate() {
-    if (!canAddItem) return;
+    if (!canAddItem) {
+      setPrereqBanner(true);
+      return;
+    }
+    setPrereqBanner(false);
     setEditing(null);
     setForm({ ...emptyForm, categoryId: categories[0]?.id || "", locationId: locations[0]?.id || "" });
     setActionError("");
@@ -142,6 +147,7 @@ export default function App() {
       if (isCategory) setCategories((current) => [...current, created]);
       else setLocations((current) => [...current, created]);
       setResourceModal("");
+      setPrereqBanner(false);
     } catch (error) {
       setActionError(error.message);
     } finally {
@@ -221,8 +227,10 @@ export default function App() {
         <div className="page-content">
           <section className="welcome">
             <div><div className="eyebrow"><span className="sun-mark">✳</span> {dateLabel}</div><h1>Pantry, in <em>balance.</em></h1><p className="welcome-copy">A little overview of what’s good in your kitchen.</p></div>
-            <button className="primary-button" onClick={openCreate} disabled={!canAddItem} title={!canAddItem ? "Add a category and location first" : undefined}><Icon name="plus" size={17} /> Add an item</button>
+            <button className="primary-button" onClick={openCreate}><Icon name="plus" size={17} /> Add an item</button>
           </section>
+
+          {prereqBanner && !canAddItem && <div className="prereq-banner" role="alert"><div className="prereq-banner-icon">✳</div><div className="prereq-banner-body"><strong>Almost there — just a little setup first</strong><p>{categories.length === 0 && locations.length === 0 ? "You'll need at least one category and one location before adding items to your pantry." : categories.length === 0 ? "You'll need at least one category before adding items." : "You'll need at least one location before adding items."}</p><div className="prereq-banner-actions">{categories.length === 0 && <button className="prereq-action" onClick={() => { setPrereqBanner(false); openResourceForm("categories"); }}>+ Add a category</button>}{locations.length === 0 && <button className="prereq-action" onClick={() => { setPrereqBanner(false); openResourceForm("locations"); }}>+ Add a location</button>}</div></div><button className="prereq-banner-dismiss" onClick={() => setPrereqBanner(false)} aria-label="Dismiss"><Icon name="close" size={14} /></button></div>}
 
           {loadError ? <div className="error-banner" role="alert"><div><strong>Couldn’t load your pantry.</strong><span>{loadError} Check the connection and try again.</span></div><button className="text-button" onClick={loadData}>Try again</button></div> : <>
             <section className="stats-grid" aria-label="Pantry overview">
